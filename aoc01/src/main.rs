@@ -2,6 +2,9 @@
 /// Daniel T. 2022-12-03
 /// Part 1 Goal: Find the elf carrying the most calories
 ///              How many total calories is that elf carrying?
+/// 
+/// Part 2: Goal identify the top three elves with the most calories. 
+///              How many calories are those elves carrying in total?
 
 use std::env;
 use file_input;
@@ -36,4 +39,13 @@ fn main() {
     // get the highest value in the elf_cals vector
     let max = elf_cals.iter().max().unwrap();
     println!("The elf carrying the most calories is carrying {} calories.", max);
+
+    // Part 2: reverse sort
+    elf_cals.sort();
+    // print the top three
+    let top_three = elf_cals[elf_cals.len()-3 .. elf_cals.len()].to_vec();
+    println!("The top three elves are carrying: {:?}", top_three);
+    let sum: i32 = top_three.iter().sum();
+    println!("The total of the top three is {}", sum);
+
 }
