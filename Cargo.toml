@@ -2,4 +2,5 @@
 members = [
 	"file-input",
 	"aoc01",
+	"aoc02",
 ]
