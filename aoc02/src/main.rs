@@ -1,4 +1,3 @@
-use core::panic;
 /// Advent of Code 2022 project 02
 /// Daniel T. 2022-12-03
 /// Part 1 Goal: What is your score if the strategy is played
@@ -11,6 +10,7 @@ use core::panic;
 
 use std::env;
 use file_input;
+use core::panic;
 
 fn main() {
     // project input
@@ -29,12 +29,13 @@ fn main() {
         [0,6,3]
     ];
     // Not fully sure if using c like enums is the most "Rust" way of doing this. 
-    let challenge = | x:GameOption, y:GameOption | -> i32 { tt[x as usize][y as usize]};
+    let challenge = | x:GameOption, y:GameOption | -> i32 { tt[y as usize][x as usize]};
 
     // Lets go ahead an read my input
     let content: Vec<String> = file_input::file_contents_as_vec(filename).expect("Failed to open input file");
 
     let option_map = | x:char | -> GameOption {
+        println!("char: {}",x );
         match x.to_ascii_uppercase() {
             'A' | 'X' => {GameOption::Rock},
             'B' | 'Y' => {GameOption::Paper},
@@ -56,7 +57,8 @@ fn main() {
 
     // lets process our data:
     let score = rounds.iter().fold(0, | acc, x| -> i32 {
-        acc + challenge(x.0, x.1) + x.1 as i32 + 1
+        println!("DEBUG:: acc {}, result: {}, x.0: {}, x.1: {}", acc, challenge(x.0, x.1), x.0 as i32, x.1 as i32);
+        acc + (challenge(x.0, x.1) + ( x.1 as i32 + 1))
     });
 
     // result 
