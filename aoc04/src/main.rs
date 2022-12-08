@@ -2,6 +2,8 @@
 /// Daniel T. 2022-12-07
 /// Part 1 Goal: Locate pairs that are completely contained within each other.
 ///             Return the total count
+/// 
+/// Part 2 Goal: locate all pairs that overlap at all. 
 
 use std::env;
 use file_input;
@@ -42,6 +44,16 @@ fn main() {
         }
     });
     println!("Part 1: The number of sets contained in another = {}", count);
+
+    // Part 2:
+    let count2: i32 = content.iter().fold(0, |acc, x| -> i32 {
+        if (x.0.max >= x.1.min && x.0.min <= x.1.max) || (x.1.max >= x.0.min && x.1.min <= x.0.max) {
+            acc + 1
+        } else {
+            acc
+        }
+    });
+    println!("Part 2: The number of sets that overlap at all = {}", count2);
 
 }
 
