@@ -2,6 +2,7 @@
 /// Daniel T. 2022-12-013
 /// Part 1 Goal: transfers crates, per instructions to determine which numbers
 ///             belong on the top.
+/// Part 2 Goal: maintain order of the crates poped off the top of the stack
 
 
 use std::env;
@@ -43,6 +44,9 @@ fn main() {
        board_line(&content[board_counter], &mut columns);
     }
 
+    // before we process/alter our board, copy if for part 2
+    let mut columns_part2 = columns.clone();
+
     // process commands
     for i in index+1..content.len() {
         let command = command_line(&content[i]);
@@ -58,7 +62,24 @@ fn main() {
     });
     
     // print the results
-    println!("The final top boxes are: {}", results);
+    println!("The final top boxes for part 1 are: {}", results);
+
+    // part 2 calculation
+    // process commands
+    for i in index+1..content.len() {
+        let command = command_line(&content[i]);
+        command.execute_part2(&mut columns_part2);
+    }
+
+    // calculate part 2 result
+    let results_part2: String = columns_part2.iter().fold("".to_string(), |mut acc: String, x| -> String {
+        if let Some(next) = x.back() {
+            acc.push(*next)
+        };
+        return acc
+    });
+
+    println!("The final top boxes for part2 are: {}", results_part2);
 }
 
 fn board_line(line: &String, stacks: &mut Vec<LinkedList<char>>) {
@@ -109,5 +130,11 @@ impl Command {
             let item = stacks[self.from].pop_back().unwrap();
             stacks[self.to].push_back(item);
         }
+    }
+
+    fn execute_part2(&self, stacks: &mut Vec<LinkedList<char>>) {
+        let index = stacks[self.from].len() - self.amount as usize;
+        let mut temp_list = stacks[self.from].split_off(index);
+        stacks[self.to].append(&mut temp_list);
     }
 }
