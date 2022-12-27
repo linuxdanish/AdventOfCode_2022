@@ -3,12 +3,14 @@
 /// Part 1 Goal: Locate the marker (four chars that are all different) and 
 ///      determine how many chars need to be processed before the first 
 ///      start of packed marker is detected?
+/// Part 2 goal: Locate start of messager marker (14 unique characters)
 
 use std::env;
 use std::collections::LinkedList;
 use std::io;
 use std::fs::File;
 use std::io::BufRead;
+use std::collections::HashMap;
 
 fn main() {
     // project input
@@ -23,38 +25,80 @@ fn main() {
     let mut input = String::new();
     let _len = reader.read_line( &mut input); // we just want the first line. The _len isn't
 
-    // create a window iterator over our string (convert ot slice if needed)
-    let input_slice = input.get(0..input.len()).unwrap();
-    let binding = input_slice.chars().collect::<Vec<char>>();
-    let binding = &binding[..];
-    let check_window = &mut binding.windows(4);
+    let mut start_of_packet_window = UniqueWindow {
+        values: LinkedList::new(),
+        dup_counter: HashMap::new(),
+        size: 4
+    };
 
-    let mut marker_index: i32  = 3;
-    let mut found = false;
-    while !found {
-        if let Some(window) = check_window.next() {
-            marker_index += 1;
-            println!("Debug: {:#?}", window);
-            let mut exists = false;
-            for i in 1..4 {
-                println!("i is: {}", i);
-                if window[i..4].contains(&window[i-1]) {
-                    exists = true;
-                    println!("duplicates {}", &window[i-1]);
-                }
-            }
-            if !exists {
-                println!("Found marker {:#?}", window);
-                found = true;
-            }
-        } else {
+    for (i,c) in input.chars().enumerate() {
+        start_of_packet_window.push(c);
+        if start_of_packet_window.is_unique() {
+            let processed_chars = i + 1; // account for zero index. 
+            println!("Part1 number of chars before the end of the first packet-start marker: {}", processed_chars);
             break;
         }
     }
 
-    println!("The number of chars to process before the end of the first marker is: {}", marker_index);
+    //part 2 
+    let mut start_of_message_finder = UniqueWindow {
+        values: LinkedList::new(),
+        dup_counter: HashMap::new(),
+        size: 14
+    };
+
+    for (i,c) in input.chars().enumerate() {
+        start_of_message_finder.push(c);
+        if start_of_message_finder.is_unique() {
+            let processed_chars = i + 1;
+            println!("Part 2 number of chars before the end of the first message-start marker: {}", processed_chars);
+            break;
+        }
+    }
 }
 
+// This is a first in first out queue to create a sliding window. 
+struct UniqueWindow {
+    values: LinkedList<char>,
+    dup_counter: HashMap<char, i32>,
+    size: usize,
+}
 
+impl UniqueWindow {
+
+    // Adds item to front of queue, queue is full, it pops off
+    // the last item
+    fn push(&mut self, x: char) {
+        if self.values.len() >= self.size {
+            if let Some(dead_key) = self.values.pop_back() {
+                let dead_val = self.dup_counter.get(&dead_key).unwrap();
+                self.dup_counter.insert(dead_key, dead_val - 1);
+            }
+        }
+        self.values.push_front(x);
+        if let Some(current_val) = self.dup_counter.get(&x) {
+            self.dup_counter.insert(x, current_val + 1);
+        } else {
+            self.dup_counter.insert(x,1);
+        }
+    } 
+
+    // checks to see if the contents of the window are each unique.
+    // returns false if queue is not fully populated
+    fn is_unique(&self)->bool {
+        if self.values.len() < self.size {
+            return false;
+        } 
+
+        let mut result = true;
+        for value in self.dup_counter.values() {
+            if *value >= 2 {
+                result = false;
+            }
+        }
+
+        return result;
+    }
+}
 
 
