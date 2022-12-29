@@ -71,13 +71,13 @@ impl UniqueWindow {
     fn push(&mut self, x: char) {
         if self.values.len() >= self.size {
             if let Some(dead_key) = self.values.pop_back() {
-                let dead_val = self.dup_counter.get(&dead_key).unwrap();
-                self.dup_counter.insert(dead_key, dead_val - 1);
+                let dead_val = self.dup_counter.get_mut(&dead_key).unwrap();
+                *dead_val -= 1;
             }
         }
         self.values.push_front(x);
-        if let Some(current_val) = self.dup_counter.get(&x) {
-            self.dup_counter.insert(x, current_val + 1);
+        if let Some(current_val) = self.dup_counter.get_mut(&x) {
+            *current_val += 1;
         } else {
             self.dup_counter.insert(x,1);
         }
