@@ -21,7 +21,7 @@ fn main() {
 
     // will build a hashmap of directories and their sizes
     // Maintain a stack of the current path 
-    let mut cur_path = Vec::<&FsDirectory>::new();
+    let mut cur_path = Vec::<&str>::new();
     let mut directories = HashMap::<&str, FsDirectory>::new();
 
 
@@ -30,7 +30,7 @@ fn main() {
         let mut line_parts = line.split_whitespace();
         match line_parts.next() {
             Some("$") => {
-                
+                command_processor(line_parts, &mut cur_path, &mut directories);
             },
             Some("dir") => {
 
@@ -45,62 +45,48 @@ fn main() {
 }
 
 // helper functions
-fn command_processor(mut line: SplitWhitespace, cur_path: &mut Vec<FsDirectory>, dirs: &mut HashMap<&str, FsDirectory> ) {
+
+// Function takes a command line "cd, ls, etc." then handles the process of CDing into and out of a directory
+fn command_processor<'b>(mut line: SplitWhitespace<'b>, cur_path: &'b mut Vec<&'b str>, dirs: &'b mut HashMap<&'b str, FsDirectory<'b>> ) {
     match line.next() {
-        Some("ls") => {},
         Some("cd") => {
             if let Some(arg) = line.next() {
                 match arg {
                     ".." => {
-                        // Pop the current directory off, and add its size to the new current directory
-                        let old_dir = cur_path.pop().unwrap();
-                        if let Some(new_dir) = cur_path.last(){
-                            new_dir.total_size +=  old_dir.total_size;
+                        // Pop the current directory name off of the stack, lookup its size and add it to 
+                        // the new directory's size
+                        let old_dir_size = dirs.get(cur_path.pop().unwrap()).unwrap().total_size;
+                        if let Some(new_dir_name) = cur_path.last(){
+                            if let Some(new_dir) = dirs.get_mut(new_dir_name) {
+                                new_dir.total_size = old_dir_size;
+                            }
                         }                        
-                        // update the old current directory in the hashmap
-                        dirs.insert(old_dir.name, old_dir);
                     },
-                    "_" => {
-                        // The argument is a file name we will need to add it to our stack. 
+                    _ => {
+                        // The argument is a directory name we will need to add it to our stack. 
                         if let Some(dir) = dirs.get(arg) {
-                            cur_path.push(*dir);
+                            cur_path.push(dir.name);
                         } else {
                             let mut dir = FsDirectory {
-                                name: &arg,
-                                total_size: 0,
-                                FsType: FsObjectType::Directory,
-                                Files: Vec::<FsFile>::new()
+                                name: arg.clone(),
+                                total_size: 0
                             };
                             dirs.insert(dir.name, dir);
-                            cur_path.push(dir);
+                            cur_path.push(dir.name);
 
                         }
                     }
                 }
             }
-        }
+        },
+        Some(_) | None => {}
     }
 }
-enum FsObjectType {
-    Directory,
-    File
-}
 
-struct FsFile {
-    size: i32,
-    FsType: FsObjectType
-}
 
+#[derive(Copy, Clone)]
 struct FsDirectory<'a> {
     name: &'a str,
     total_size: i32,
-    FsType:  FsObjectType,
-    Files: Vec<FsFile>
-}
-
-impl FsDirectory {
-    fn size(&self)-> i32 {
-        self.Files.iter().fold(0, |acc, x| acc + x.size)
-    }
 }
 
